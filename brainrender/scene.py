@@ -180,11 +180,12 @@ class Scene(JupyterMixIn, Render):
                 self._prepare_actor(actor)
 
         # add actors to plotter
+        # self.plotter.show(interactive=True)
         for actor in actors:
             try:
-                self.plotter.add(actor._mesh)
+                self.plotter.add(actor._mesh,render=False)
             except AttributeError:  # e.g. for titles
-                self.plotter.add(actor.mesh)
+                self.plotter.add(actor.mesh,render=False)
 
         # Add to the lists actors
         self.actors.extend(actors)

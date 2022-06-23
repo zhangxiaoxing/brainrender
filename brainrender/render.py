@@ -254,7 +254,7 @@ class Render:
                 zoom=zoom,
                 bg=settings.BACKGROUND_COLOR,
                 camera=camera.copy() if update_camera else None,
-                interactorStyle=0,
+                # interactorStyle=0,
                 rate=40,
             )
         elif self.backend == "k3d":  # pragma: no cover
