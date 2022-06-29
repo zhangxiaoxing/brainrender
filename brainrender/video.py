@@ -85,7 +85,8 @@ class VideoMaker:
         :param video: vedo Video class used to create the video
         """
         nframes = int(fps * duration)
-        for i in track(range(nframes), description="Generating frames"):
+        for i in range(nframes):
+            print(f'Generating frame {i}')
             self.make_frame_func(self.scene, i, nframes, *args, **kwargs)
             video.addFrame()
 

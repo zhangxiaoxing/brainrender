@@ -9,7 +9,13 @@ from pathlib import Path
 
 def make_frame(scene, frame_number, *args, **kwargs):
     for (idx,r) in enumerate(kwargs['regs']):
-        c=map_color(kwargs['sens_v'][frame_number,idx], name='jet', vmin=0, vmax=0.2)
+        if kwargs['ctype']=='both':
+            c=np.array([0.2+kwargs['sens_v'][frame_number,idx]*0.8,0.2,0.2+kwargs['dur_v'][frame_number,idx]*0.8])
+        elif kwargs['ctype']=='sens':
+            c=np.array([0.2+kwargs['sens_v'][frame_number,idx]*0.8,0.2,0.2])
+        elif kwargs['ctype']=='dur':
+            c=np.array([0.2,0.2,0.2+kwargs['dur_v'][frame_number,idx]*0.8])
+            
         scene.get_actors(br_class="brain region", name=r)[0].color(c)
 
 fpath=os.path.join("..","code","jpsth","wave_movie.hdf5")
@@ -17,12 +23,6 @@ with h5py.File(fpath,'r') as f:
     regs=[r.decode('latin-1') for r in f['reg'][0,:]]
     sens_v=np.array(f['sens_v'])
     dur_v=np.array(f['dur_v'])
-
-# Create a brainrender scene
-scene = Scene(title="brain regions")
-# Add brain regions
-for r in regs:
-    scene.add_brain_region(r,alpha=0.2,color="grey", silhouette=False)
 
 custom_camera = {
      'pos': (21369, 18996, -55938),
@@ -32,6 +32,20 @@ custom_camera = {
      'distance': 62606, 
      }
 
-vm=VideoMaker(scene,".","3d_wave",make_frame_func=make_frame)
-vm.make_video(duration=11,fps=30,render_kwargs={'camera':custom_camera,'zoom':1.5},regs=regs,sens_v=sens_v)
+for ctype in [['Both wave','both'],['Sensory wave','sens'],['Duration wave','dur']]:
 
+    # Create a brainrender scene
+    scene = Scene(title=ctype[0])
+
+    # Add brain regions
+    for r in regs:
+        scene.add_brain_region(r,alpha=0.2,color="grey", silhouette=False)
+
+    vm=VideoMaker(scene,".",f"3d_wave_{ctype[1]}",make_frame_func=make_frame,size='740x480')
+    vm.make_video(duration=11,fps=30,render_kwargs={'camera':custom_camera,'zoom':3},regs=regs,sens_v=sens_v,dur_v=dur_v,ctype=ctype[1])
+    
+
+
+# ffmpeg -i "3d_wave_sens.mp4" -vf "[in] scale=iw:ih, pad=2*iw:ih [left];movie=3d_wave_dur.mp4, scale=iw:ih [right]; [left][right] overlay=main_w/2:0 [out]" "SideBySide_Top.mp4"
+# ffmpeg -i "3d_wave_both.mp4" -vf "[in] scale=iw:ih, pad=2*iw:ih [left];movie=sens_dur_wave.mp4, scale=iw:ih [right]; [left][right] overlay=main_w/2:0 [out]" "SideBySide_Bottom.mp4"
+# ffmpeg -i "SideBySide_Top.mp4" -vf "pad=iw:2*ih [top]; movie=SideBySide_Bottom.mp4 [bottom]; [top][bottom] overlay=0:main_h/2" "Tiled_4_Camera_View.mp4"
