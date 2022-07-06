@@ -24,6 +24,8 @@ with h5py.File(fpath,'r') as f:
     sens_v=np.array(f['sens_v'])
     dur_v=np.array(f['dur_v'])
 
+movie_dur=sens_v.shape[0]/30
+
 custom_camera = {
      'pos': (21369, 18996, -55938),
      'viewup': (0, 1, 0),
@@ -42,10 +44,14 @@ for ctype in [['Both wave','both'],['Sensory wave','sens'],['Duration wave','dur
         scene.add_brain_region(r,alpha=0.2,color="grey", silhouette=False)
 
     vm=VideoMaker(scene,".",f"3d_wave_{ctype[1]}",make_frame_func=make_frame,size='740x480')
-    vm.make_video(duration=11,fps=30,render_kwargs={'camera':custom_camera,'zoom':3},regs=regs,sens_v=sens_v,dur_v=dur_v,ctype=ctype[1])
+    vm.make_video(duration=movie_dur,fps=30,render_kwargs={'camera':custom_camera,'zoom':3},regs=regs,sens_v=sens_v,dur_v=dur_v,ctype=ctype[1])
     
 
 
-# ffmpeg -i "3d_wave_sens.mp4" -vf "[in] scale=iw:ih, pad=2*iw:ih [left];movie=3d_wave_dur.mp4, scale=iw:ih [right]; [left][right] overlay=main_w/2:0 [out]" "SideBySide_Top.mp4"
-# ffmpeg -i "3d_wave_both.mp4" -vf "[in] scale=iw:ih, pad=2*iw:ih [left];movie=sens_dur_wave.mp4, scale=iw:ih [right]; [left][right] overlay=main_w/2:0 [out]" "SideBySide_Bottom.mp4"
-# ffmpeg -i "SideBySide_Top.mp4" -vf "pad=iw:2*ih [top]; movie=SideBySide_Bottom.mp4 [bottom]; [top][bottom] overlay=0:main_h/2" "Tiled_4_Camera_View.mp4"
+# ffmpeg -i "3d_wave_sens.mp4" -vf "pad=iw:2*ih [top]; movie=k\\:/code/jpsth/sens_dur_wave_sens.mp4 [bottom]; [top][bottom] overlay=0:main_h/2" "TopDown_Sens.mp4" 
+
+# ffmpeg -i "3d_wave_dur.mp4" -vf "pad=iw:2*ih [top]; movie=k\\:/code/jpsth/sens_dur_wave_dur.mp4 [bottom]; [top][bottom] overlay=0:main_h/2" "TopDown_Dur.mp4" 
+
+# ffmpeg -i "3d_wave_both.mp4" -vf "pad=iw:2*ih [top]; movie=k\\:/code/jpsth/sens_dur_wave_both.mp4 [bottom]; [top][bottom] overlay=0:main_h/2" "TopDown_Both.mp4"
+
+# ffmpeg -f concat -i concat.txt -c:v libx264 -g 30 -profile:v main Wave_TopDown.mp4
